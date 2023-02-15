@@ -5,11 +5,13 @@ import static java.lang.Math.max;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Pair;
 import android.view.MenuInflater;
@@ -34,6 +36,7 @@ public class StillImageActivity extends AppCompatActivity {
     private static final String TEXT_RECOGNITION_CHINESE = "Text Recognition Chinese (Beta)";
 
     private static final int REQUEST_CHOOSE_IMAGE = 1002;
+    private static final int REQUEST_IMAGE_CAPTURE = 1001;
 
     private static final String SIZE_SCREEN = "w:screen"; // Match screen width
     private static final String SIZE_1024_768 = "w:1024"; // ~1024*768 in a normal ratio
@@ -77,7 +80,7 @@ public class StillImageActivity extends AppCompatActivity {
                                             startChooseImageIntentForResult();
                                             return true;
                                         } else if (itemId == R.id.take_photo_using_camera) {
-//                                            startCameraIntentForResult();
+                                            startCameraIntentForResult();
                                             return true;
                                         }
                                         return false;
@@ -103,6 +106,22 @@ public class StillImageActivity extends AppCompatActivity {
                         });
     }
 
+    private void startCameraIntentForResult() {
+        // Clean up last time's image
+        imageUri = null;
+        preview.setImageBitmap(null);
+
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.TITLE, "New Picture");
+            values.put(MediaStore.Images.Media.DESCRIPTION, "From Camera");
+            imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
+    }
+
     private void startChooseImageIntentForResult() {
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -112,7 +131,9 @@ public class StillImageActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_CHOOSE_IMAGE && resultCode == RESULT_OK) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            tryReloadAndDetectInImage();
+        } else if (requestCode == REQUEST_CHOOSE_IMAGE && resultCode == RESULT_OK) {
             // In this case, imageUri is returned by the chooser, save it.
             imageUri = data.getData();
             tryReloadAndDetectInImage();
