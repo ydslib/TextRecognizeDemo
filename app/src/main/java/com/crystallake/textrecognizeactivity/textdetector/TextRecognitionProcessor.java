@@ -22,7 +22,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.crystallake.textrecognizeactivity.GraphicOverlay;
+import com.crystallake.textrecognizeactivity.RecognizeListener;
 import com.crystallake.textrecognizeactivity.VisionProcessorBase;
 import com.google.android.gms.tasks.Task;
 import com.google.mlkit.vision.common.InputImage;
@@ -40,6 +40,7 @@ public class TextRecognitionProcessor extends VisionProcessorBase<Text> {
     private static final String TAG = "TextRecProcessor";
 
     private final TextRecognizer textRecognizer;
+    private RecognizeListener<Text> mRecognizeListener;
 
     public TextRecognitionProcessor(
             Context context, TextRecognizerOptionsInterface textRecognizerOptions) {
@@ -53,17 +54,21 @@ public class TextRecognitionProcessor extends VisionProcessorBase<Text> {
         textRecognizer.close();
     }
 
+    public TextRecognitionProcessor setRecognizeListener(RecognizeListener<Text> mRecognizeListener){
+        this.mRecognizeListener = mRecognizeListener;
+        return this;
+    }
+
     @Override
     protected Task<Text> detectInImage(InputImage image) {
         return textRecognizer.process(image);
     }
 
     @Override
-    protected void onSuccess(@NonNull Text text, @NonNull GraphicOverlay graphicOverlay) {
+    protected void onSuccess(@NonNull Text text) {
         Log.d(TAG, "On-device Text detection successful");
-
-        for (Text.TextBlock textBlock : text.getTextBlocks()) {
-            System.out.println("onSuccess:" + textBlock.getText());
+        if (mRecognizeListener != null) {
+            mRecognizeListener.onSuccess(text);
         }
 
     }
@@ -71,5 +76,9 @@ public class TextRecognitionProcessor extends VisionProcessorBase<Text> {
     @Override
     protected void onFailure(@NonNull Exception e) {
         Log.w(TAG, "Text detection failed." + e);
+        if (mRecognizeListener != null) {
+            mRecognizeListener.onFailure(e);
+        }
     }
+
 }

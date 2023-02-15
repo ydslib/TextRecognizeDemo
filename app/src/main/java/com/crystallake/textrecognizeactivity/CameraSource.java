@@ -90,8 +90,6 @@ public class CameraSource {
   // to it.
   private SurfaceTexture dummySurfaceTexture;
 
-  private final GraphicOverlay graphicOverlay;
-
   /**
    * Dedicated thread and associated runnable for calling into the detector with frames, as the
    * frames become available from the camera.
@@ -114,10 +112,8 @@ public class CameraSource {
    */
   private final IdentityHashMap<byte[], ByteBuffer> bytesToByteBuffer = new IdentityHashMap<>();
 
-  public CameraSource(Activity activity, GraphicOverlay overlay) {
+  public CameraSource(Activity activity) {
     this.activity = activity;
-    graphicOverlay = overlay;
-    graphicOverlay.clear();
     processingRunnable = new FrameProcessingRunnable();
   }
 
@@ -129,7 +125,6 @@ public class CameraSource {
   public void release() {
     synchronized (processorLock) {
       stop();
-      cleanScreen();
 
       if (frameProcessor != null) {
         frameProcessor.stop();
@@ -566,7 +561,6 @@ public class CameraSource {
 
   public void setMachineLearningFrameProcessor(VisionImageProcessor processor) {
     synchronized (processorLock) {
-      cleanScreen();
       if (frameProcessor != null) {
         frameProcessor.stop();
       }
@@ -690,7 +684,7 @@ public class CameraSource {
                     .setHeight(previewSize.getHeight())
                     .setRotation(rotationDegrees)
                     .build(),
-                graphicOverlay);
+                activity);
           }
         } catch (Exception t) {
           Log.e(TAG, "Exception thrown from receiver.", t);
@@ -699,10 +693,5 @@ public class CameraSource {
         }
       }
     }
-  }
-
-  /** Cleans up graphicOverlay and child classes can do their cleanups as well . */
-  private void cleanScreen() {
-    graphicOverlay.clear();
   }
 }

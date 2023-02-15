@@ -2,6 +2,7 @@ package com.crystallake.textrecognizeactivity;
 
 import static java.lang.Math.max;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -16,9 +17,11 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.crystallake.textrecognizeactivity.textdetector.TextRecognitionProcessor;
+import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
@@ -43,12 +46,13 @@ public class StillImageActivity extends AppCompatActivity {
     private Uri imageUri;
     private int imageMaxWidth;
     private int imageMaxHeight;
-    private GraphicOverlay graphicOverlay;
 
     boolean isLandScape;
     private ImageView preview;
 
     private VisionImageProcessor imageProcessor;
+
+    private TextView recognizeMsg;
 
 
     @Override
@@ -60,7 +64,7 @@ public class StillImageActivity extends AppCompatActivity {
                 (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
 
         preview = findViewById(R.id.preview);
-        graphicOverlay = findViewById(R.id.graphic_overlay);
+        recognizeMsg = findViewById(R.id.scan_msg);
         findViewById(R.id.select_image_button)
                 .setOnClickListener(
                         view -> {
@@ -135,7 +139,6 @@ public class StillImageActivity extends AppCompatActivity {
             }
 
             // Clear the overlay first
-            graphicOverlay.clear();
 
             Bitmap resizedBitmap;
             if (selectedSize.equals(SIZE_ORIGINAL)) {
@@ -161,9 +164,7 @@ public class StillImageActivity extends AppCompatActivity {
             preview.setImageBitmap(resizedBitmap);
 
             if (imageProcessor != null) {
-                graphicOverlay.setImageSourceInfo(
-                        resizedBitmap.getWidth(), resizedBitmap.getHeight(), /* isFlipped= */ false);
-                imageProcessor.processBitmap(resizedBitmap, graphicOverlay);
+                imageProcessor.processBitmap(resizedBitmap,this);
             } else {
                 Log.e(TAG, "Null imageProcessor, please check adb logs for imageProcessor creation error");
             }
@@ -208,7 +209,22 @@ public class StillImageActivity extends AppCompatActivity {
                         imageProcessor.stop();
                     }
                     imageProcessor =
-                            new TextRecognitionProcessor(this, new TextRecognizerOptions.Builder().build());
+                            new TextRecognitionProcessor(this, new TextRecognizerOptions.Builder().build())
+                                    .setRecognizeListener(new RecognizeListener<Text>() {
+                                        @Override
+                                        public void onSuccess(@NonNull Text results) {
+                                            StringBuilder sb = new StringBuilder();
+                                            for (Text.TextBlock textBlock : results.getTextBlocks()) {
+                                                sb.append(textBlock.getText()).append("\n");
+                                            }
+                                            recognizeMsg.setText(sb.toString());
+                                        }
+
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+
+                                        }
+                                    });
                     break;
                 case TEXT_RECOGNITION_CHINESE:
                     if (imageProcessor != null) {
@@ -216,7 +232,21 @@ public class StillImageActivity extends AppCompatActivity {
                     }
                     imageProcessor =
                             new TextRecognitionProcessor(
-                                    this, new ChineseTextRecognizerOptions.Builder().build());
+                                    this, new ChineseTextRecognizerOptions.Builder().build()).setRecognizeListener(new RecognizeListener<Text>() {
+                                @Override
+                                public void onSuccess(@NonNull Text results) {
+                                    StringBuilder sb = new StringBuilder();
+                                    for (Text.TextBlock textBlock : results.getTextBlocks()) {
+                                        sb.append(textBlock.getText()).append("\n");
+                                    }
+                                    recognizeMsg.setText(sb.toString());
+                                }
+
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+
+                                }
+                            });
                     break;
             }
         }catch (Exception e){

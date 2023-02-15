@@ -10,23 +10,22 @@
     >
     <ImageView
         android:id="@+id/preview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
         android:adjustViewBounds="true"
-        app:layout_constraintBottom_toTopOf="@+id/control"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-    <com.crystallake.textrecognizeactivity.GraphicOverlay
-        android:id="@+id/graphic_overlay"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintLeft_toLeftOf="@id/preview"
-        app:layout_constraintRight_toRightOf="@id/preview"
-        app:layout_constraintTop_toTopOf="@id/preview"
-        app:layout_constraintBottom_toBottomOf="@id/preview"/>
+    <TextView
+        android:id="@+id/scan_msg"
+        app:layout_constraintTop_toBottomOf="@+id/preview"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_width="match_parent"
+        android:textIsSelectable="true"
+        android:layout_height="wrap_content"/>
     <LinearLayout
-        android:id="@id/control"
+        android:id="@+id/control"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
